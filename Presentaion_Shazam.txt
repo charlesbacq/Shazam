@@ -1,0 +1,57 @@
+PROJET SHAZAM :	
+
+Une base de données:
+	Attribus : Dico avec nom du son, nbr d'empreintes, tableau avec les empreintes
+	-Méthode de lecture
+	-Méthode d'ajout
+	-Tableau ? Pile ? Dico ? 
+
+Type extrait sonore ?
+	Attribu : Tableau avec ses empreintes
+			Le nombre d'empreintes
+
+
+Type empreinte d'une musique :
+	Atribus: Tableau de point de constelation associé à ses points d'encrages. 
+	-méthode de création d'empreinte
+	-Méthode de creation du spectro
+	-Méthode de crétion de la constelation
+	-recherche des points d'encrege(definition d'une zone cible)
+	-Méthode création de marqueur temporel ( classe propre ou pas  )
+		le marqueur temporel [(523, 659, 27), 37000] représente le 
+		couple de points dont le premier a une fréquence de 523 Hz,
+		 le second de 659 Hz, séparés de 27 millisecondes et dont le
+		 premier arrive à la 37e seconde du morceau 
+		 (37 000 millisecondes). 
+
+Type constelation ? Type point de constelation(encrage et/ou point normal) ? 
+
+Methode globale : 
+	Lancer l'analyse d'un son --> Donne le match. 
+	Peut-être calcul du pourcentage d'erreur? 
+
+En finalité: peut-être interface graphique ? (éventuellement app mobile)
+	Suppose de s'avoir récuperer le son du micro, et executer un code python
+	sur le téléphone, ainsi que d'avoir une base de donnée analysable sur tel. 
+
+
+Calendrier :
+Au préalable :
+-Choix du langage et des modules
+-Concertation sur les diff élements du projets (classes ect)
+-
+
+ 1-Partie Analyse sonore :
+	But: passer de l'extrait sonore à son Spectro, puis à la constelation 
+	puis aux points d'encrages, puis à l'empreinte. 
+
+2-Patie Création de la base sonore : 
+	but : Création d'une base de données consutltable contenant les empreintes de
+	son connus. 
+
+3-Partie Recherche de match:
+	but : reconnaitre la musique correspondante à un extrait sonore
+	et critique des résulats en fct des conditions ( bruits, qualité sonore)
+
+(4-Partie Interface utilisateur)
+	but : Faire une interface graphique utilisateur (éventuellement sur téléphone)
