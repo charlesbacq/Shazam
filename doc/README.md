@@ -33,6 +33,8 @@ Objectifs croissants de la partie :
 extrait d'un son (partie du son non-détériorée) avec ce son présent en base de donnée.
 * Essayer l'algorithme sur une base de données plus vaste et des extraits sonores de moins grande qualité.
 
+Cette partie est résumée sous forme de schéma dans le fichier : Shazamage.pdf.
+
 
 
 
@@ -44,3 +46,7 @@ Objectifs croissants de la partie :
 * Faire en sorte de pouvoir ajouter un extrait sonore sur lequel on effectue la création d’empreinte et la recherche de matching, pour enfin donner un résultat avec possiblement un intervalle de confiance.
 
 
+```python
+class Myclass():
+    pass
+```
