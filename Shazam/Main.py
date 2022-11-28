@@ -1,4 +1,4 @@
-import Shazamage.py as sh
+import Shazamage as sh
 
 if __name__ == '__main__':
     # print(musical_print_creation("Avicii - Hey Brother.flac")[0:10])
