@@ -8,10 +8,6 @@ import random as rd
 IDX_FREQ_I = 0
 IDX_TIME_J = 1
 
-# Sampling rate, related to the Nyquist conditions, which affects
-# the range frequencies we can detect.
-DEFAULT_FS = 44100
-
 # Size of the FFT window, affects frequency granularity
 DEFAULT_WINDOW_SIZE = 4096
 
@@ -40,17 +36,11 @@ PEAK_NEIGHBORHOOD_SIZE = 20
 MIN_HASH_TIME_DELTA = 0
 MAX_HASH_TIME_DELTA = 200
 
-# If True, will sort peaks temporally for fingerprinting;
-# not sorting will cut down number of fingerprints, but potentially
-# affect performance.
-PEAK_SORT = True
 
 # Number of bits to throw away from the front of the SHA1 hash in the
 # fingerprint calculation. The more you throw away, the less storage, but
 # potentially higher collisions and misclassifications when identifying songs.
 FINGERPRINT_REDUCTION = 20
-
-
 
 
 def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
@@ -78,10 +68,11 @@ def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
                 t_delta = t2 - t1
                 print(str(freq1), str(freq2), str(t_delta))
                 # check if delta is between min & max
-                if t_delta >= MIN_HASH_TIME_DELTA and t_delta <= MAX_HASH_TIME_DELTA:
+                if MIN_HASH_TIME_DELTA <= t_delta <= MAX_HASH_TIME_DELTA:
                     h = hashlib.sha1(b'%s %s %s' % (str(freq1), str(freq2), str(t_delta)))
 
-                    yield (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
+                    yield h.hexdigest()[0:FINGERPRINT_REDUCTION], t1
+
 
 def sample_loading(sample):
     """
@@ -90,6 +81,7 @@ def sample_loading(sample):
     :return: A loaded sample exploitable in Librosa
     """
     return lb.load(sample)
+
 
 def create_peaks(sample):
     """
@@ -141,17 +133,18 @@ def musical_print_creation(sample):
                 # check if delta is between min & max
                 if t_delta >= MIN_HASH_TIME_DELTA and t_delta <= MAX_HASH_TIME_DELTA:
                     musical_print.append([[freq1, freq2, t_delta], t1])
-                    #musical_print.append([hashlib.sha1("%s|%s|%s" % (str(freq1), str(freq2), str(t_delta))), t1])
+                    # musical_print.append([hashlib.sha1("%s|%s|%s" % (str(freq1), str(freq2), str(t_delta))), t1])
     return musical_print
 
-def display_spectro(sample, show_peaks = True):
+
+def display_spectro(sample, show_peaks=True):
     """
     Function that displays the spectrogram of a sample
     :param sample: sample of the song you want to turn into the spectrogram
     :param show_peaks: bool if True shows the peaks selected in the song on the spectrogram
     :return: void
     """
-    y , sr = sample_loading(sample)
+    y, sr = sample_loading(sample)
     onset_env = librosa.onset.onset_strength(y=y, sr=sr,
                                              hop_length=512,
                                              aggregate=np.median)
@@ -167,7 +160,7 @@ def display_spectro(sample, show_peaks = True):
     ax[0].legend(frameon=True, framealpha=0.8)
     ax[0].label_outer()
 
-    if(show_peaks):
+    if (show_peaks):
         peaks = create_peaks(sample)
         peaks_frequency = [peaks[i][0] for i in range(len(peaks))]
         peaks_time = [peaks[i][1] for i in range(len(peaks))]
@@ -176,24 +169,25 @@ def display_spectro(sample, show_peaks = True):
     plt.show()
 
 
-def most_frequent(List):
+def most_frequent(list):
     """
     Function that give the most frequent element in a List
-    :param List: List of element
+    :param list: List of element
     :return: The most frequent element in the list
     """
-    if len(List)==0:
+    if len(list) == 0:
         return "no_match"
     counter = 0
-    num = List[0]
+    num = list[0]
 
-    for i in List:
-        curr_frequency = List.count(i)
-        if (curr_frequency > counter):
+    for i in list:
+        curr_frequency = list.count(i)
+        if curr_frequency > counter:
             counter = curr_frequency
             num = i
 
     return num
+
 
 def matching_random(data_base, musical_print):
     """
@@ -205,9 +199,10 @@ def matching_random(data_base, musical_print):
     :return: The name and artist of the song that matched in the data base, and a statistic
     showing the accuracy of the match : ("name", "artist", float stat)
     """
-    random_int = rd.randint(0,len(data_base) - 1)
-    #print("Random Match : ", data_base[random_int][0], " - ", data_base[random_int][1] , "; Accuracy : ", 0)
-    return data_base[random_int][0], data_base[random_int][1] , 0
+    random_int = rd.randint(0, len(data_base) - 1)
+    # print("Random Match : ", data_base[random_int][0], " - ", data_base[random_int][1] , "; Accuracy : ", 0)
+    return data_base[random_int][0], data_base[random_int][1], 0
+
 
 def matching_brute_force(data_base, musical_print):
     """
@@ -220,31 +215,27 @@ def matching_brute_force(data_base, musical_print):
     """
     song_title = 'unknow'
     matching_rate = 0
-    #Brute forced researsh of temporal marks match comparing musical print in the data base with the one
-    #of the song
-    match = [matching_random(data_base, musical_print)[0],matching_random(data_base, musical_print)[1],matching_random(data_base, musical_print)[2]]
+    # Brute forced researsh of temporal marks match comparing musical print in the data base with the one
+    # of the song
+    match = [matching_random(data_base, musical_print)[0], matching_random(data_base, musical_print)[1],
+             matching_random(data_base, musical_print)[2]]
     for song_musical_print in data_base:
         matching_detlaT = []
         nb_temporal_mark_match = 0
         for song_temporal_mark in song_musical_print[2]:
 
             for sample_temporal_mark in musical_print:
-                if(sample_temporal_mark[0] == song_temporal_mark[0]):
+                if (sample_temporal_mark[0] == song_temporal_mark[0]):
                     matching_detlaT.append(song_temporal_mark[1] - sample_temporal_mark[1])
-                    nb_temporal_mark_match +=1
+                    nb_temporal_mark_match += 1
         plt.hist(matching_detlaT)
         print("Nombre de match pour " + song_musical_print[0] + "-" + song_musical_print[1] + " :",
-             nb_temporal_mark_match)
+              nb_temporal_mark_match)
         print("Meuilleur DeltaT : ", most_frequent(matching_detlaT))
         plt.show()
-        accuracy = nb_temporal_mark_match *  matching_detlaT.count(most_frequent(matching_detlaT)) / len(musical_print)
-        if(accuracy>match[2]):
-            match = [song_musical_print[0], song_musical_print[1], accuracy ]
+        accuracy = nb_temporal_mark_match * matching_detlaT.count(most_frequent(matching_detlaT)) / len(musical_print)
+        if (accuracy > match[2]):
+            match = [song_musical_print[0], song_musical_print[1], accuracy]
     print(match)
 
-#print(musical_print_creation("Avicii - Hey Brother.flac")[0:10])
-display_spectro("Avicii - Hey Brother.flac")
-song_print = [["Hey brother", "Avicii", musical_print_creation("Avicii - Hey Brother.flac")], ["Give Me Your Loving (feat. Lorne)", "Armand van Helden", musical_print_creation("Armand van Helden - Give Me Your Loving (feat. Lorne).flac")]]
-sample_print = musical_print_creation("Avicii - Hey Brother 142.flac")
-matching_random(song_print, sample_print)
-matching_brute_force(song_print, sample_print)
+
