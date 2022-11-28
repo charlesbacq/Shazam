@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import List, Tuple
+
 import librosa as lb
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,14 +39,13 @@ PEAK_NEIGHBORHOOD_SIZE = 20
 MIN_HASH_TIME_DELTA = 0
 MAX_HASH_TIME_DELTA = 200
 
-
 # Number of bits to throw away from the front of the SHA1 hash in the
 # fingerprint calculation. The more you throw away, the less storage, but
 # potentially higher collisions and misclassifications when identifying songs.
 FINGERPRINT_REDUCTION = 20
 
 
-def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
+def generate_hashes(peaks: List[Tuple[float, float]], fan_value: int = DEFAULT_FAN_VALUE):
     """
     Function that gives the musical print of the song where every temporal mark is
     turn into a hash
@@ -74,22 +76,22 @@ def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
                     yield h.hexdigest()[0:FINGERPRINT_REDUCTION], t1
 
 
-def sample_loading(sample):
+def sample_loading(sample_path: str):
     """
-    Function that takes a sample and loads it in Librosa to be analyse
-    :param sample: sample of the song you want to load
+    Function that takes a sample path and loads it in Librosa to be analyse
+    :param sample_path: path of the sample of the song you want to load
     :return: A loaded sample exploitable in Librosa
     """
-    return lb.load(sample)
+    return lb.load(sample_path)
 
 
-def create_peaks(sample):
+def create_peaks(sample_path: str):
     """
     Function that gives the peaks(time and frequency) in a song
-    :param sample: sample of the song you want to analyse
+    :param sample_path: path of the sample path of the song you want to analyse
     :return: List of the peaks time and frequency : [[time_peak,freq_peak] for peaks in song]
     """
-    y, sr = sample_loading(sample)
+    y, sr = sample_loading(sample_path)
     onset_env = librosa.onset.onset_strength(y=y, sr=sr,
                                              hop_length=512,
                                              aggregate=np.median)
@@ -106,15 +108,16 @@ def create_peaks(sample):
     return [[peaks_frequency[i], times[peaks[i]]] for i in range(len(peaks))]
 
 
-def musical_print_creation(sample):
+def musical_print_creation(sample_path: str, is_hash: bool = False):
     """
     Function that takes a sample of a song and gives its musical print
-    :param sample: sample of the song you want to turn into the spectrogram
-    :return: muscial print : list of temporal marks
+    :param is_hash: if True the temporal marks ar of this form [hash, t1]
+    :param sample_path: path of the sample of the song you want to turn into the spectrogram
+    :return: musical print : list of temporal marks
     of this form : [[freq1, freq2, t_delta], t1]
     """
-    y, sr = sample_loading(sample)
-    peaks = create_peaks(sample)
+    y, sr = sample_loading(sample_path)
+    peaks = create_peaks(sample_path)
     musical_print = []
     for i in range(len(peaks)):
         for j in range(1, DEFAULT_FAN_VALUE):
@@ -132,19 +135,24 @@ def musical_print_creation(sample):
                 t_delta = t2 - t1
                 # check if delta is between min & max
                 if t_delta >= MIN_HASH_TIME_DELTA and t_delta <= MAX_HASH_TIME_DELTA:
-                    musical_print.append([[freq1, freq2, t_delta], t1])
-                    # musical_print.append([hashlib.sha1("%s|%s|%s" % (str(freq1), str(freq2), str(t_delta))), t1])
+                    if not (is_hash):
+                        musical_print.append([[freq1, freq2, t_delta], t1])
+                    else:
+
+                        phrase = str(freq1) + '|' + str(freq2) + '|' + str(t_delta)
+                        phrase = str.encode(phrase)
+                        musical_print.append([hashlib.sha1(phrase).hexdigest(), t1])
     return musical_print
 
 
-def display_spectro(sample, show_peaks=True):
+def display_spectro(sample_path: str, show_peaks: bool = True):
     """
     Function that displays the spectrogram of a sample
-    :param sample: sample of the song you want to turn into the spectrogram
+    :param sample_path: path of the sample of the song you want to turn into the spectrogram
     :param show_peaks: bool if True shows the peaks selected in the song on the spectrogram
     :return: void
     """
-    y, sr = sample_loading(sample)
+    y, sr = sample_loading(sample_path)
     onset_env = librosa.onset.onset_strength(y=y, sr=sr,
                                              hop_length=512,
                                              aggregate=np.median)
@@ -160,8 +168,8 @@ def display_spectro(sample, show_peaks=True):
     ax[0].legend(frameon=True, framealpha=0.8)
     ax[0].label_outer()
 
-    if (show_peaks):
-        peaks = create_peaks(sample)
+    if show_peaks:
+        peaks = create_peaks(sample_path)
         peaks_frequency = [peaks[i][0] for i in range(len(peaks))]
         peaks_time = [peaks[i][1] for i in range(len(peaks))]
         plt.scatter(peaks_time, peaks_frequency)
@@ -169,7 +177,7 @@ def display_spectro(sample, show_peaks=True):
     plt.show()
 
 
-def most_frequent(list):
+def most_frequent(list: List):
     """
     Function that give the most frequent element in a List
     :param list: List of element
@@ -189,7 +197,7 @@ def most_frequent(list):
     return num
 
 
-def matching_random(data_base, musical_print):
+def matching_random(data_base: List, musical_print: List):
     """
     Function that takes a musical print and
     randomly gives a the matching song in the
@@ -204,7 +212,7 @@ def matching_random(data_base, musical_print):
     return data_base[random_int][0], data_base[random_int][1], 0
 
 
-def matching_brute_force(data_base, musical_print):
+def matching_brute_force(data_base: List, musical_print: List):
     """
     Function that takes a musical print and  gives a the matching song in the
     database using brute forcing
@@ -225,7 +233,7 @@ def matching_brute_force(data_base, musical_print):
         for song_temporal_mark in song_musical_print[2]:
 
             for sample_temporal_mark in musical_print:
-                if (sample_temporal_mark[0] == song_temporal_mark[0]):
+                if sample_temporal_mark[0] == song_temporal_mark[0]:
                     matching_detlaT.append(song_temporal_mark[1] - sample_temporal_mark[1])
                     nb_temporal_mark_match += 1
         plt.hist(matching_detlaT)
@@ -234,8 +242,6 @@ def matching_brute_force(data_base, musical_print):
         print("Meuilleur DeltaT : ", most_frequent(matching_detlaT))
         plt.show()
         accuracy = nb_temporal_mark_match * matching_detlaT.count(most_frequent(matching_detlaT)) / len(musical_print)
-        if (accuracy > match[2]):
+        if accuracy > match[2]:
             match = [song_musical_print[0], song_musical_print[1], accuracy]
     print(match)
-
-
