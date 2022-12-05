@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import librosa.display
 import hashlib
 import random as rd
+import shazam_data_base as db
 
 IDX_FREQ_I = 0
 IDX_TIME_J = 1
@@ -43,37 +44,6 @@ MAX_HASH_TIME_DELTA = 200
 # fingerprint calculation. The more you throw away, the less storage, but
 # potentially higher collisions and misclassifications when identifying songs.
 FINGERPRINT_REDUCTION = 20
-
-
-def generate_hashes(peaks: List[Tuple[float, float]], fan_value: int = DEFAULT_FAN_VALUE):
-    """
-    Function that gives the musical print of the song where every temporal mark is
-    turn into a hash
-    :param peaks: Peaks
-    :param fan_value:
-    :return:
-    """
-    # bruteforce all peaks
-    for i in range(len(peaks)):
-        for j in range(1, fan_value):
-            if (i + j) < len(peaks):
-
-                # take current & next peak frequency value
-                freq1 = peaks[i][IDX_FREQ_I]
-                freq2 = peaks[i + j][IDX_FREQ_I]
-
-                # take current & next -peak time offset
-                t1 = peaks[i][IDX_TIME_J]
-                t2 = peaks[i + j][IDX_TIME_J]
-
-                # get diff of time offsets
-                t_delta = t2 - t1
-                print(str(freq1), str(freq2), str(t_delta))
-                # check if delta is between min & max
-                if MIN_HASH_TIME_DELTA <= t_delta <= MAX_HASH_TIME_DELTA:
-                    h = hashlib.sha1(b'%s %s %s' % (str(freq1), str(freq2), str(t_delta)))
-
-                    yield h.hexdigest()[0:FINGERPRINT_REDUCTION], t1
 
 
 def sample_loading(sample_path: str):
@@ -115,8 +85,8 @@ def musical_print_creation(sample_path: str, is_hash: bool = False):
     :param sample_path: path of the sample of the song you want to turn into the spectrogram
     :return: musical print : list of temporal marks
     of this form : [[freq1, freq2, t_delta], t1]
+
     """
-    y, sr = sample_loading(sample_path)
     peaks = create_peaks(sample_path)
     musical_print = []
     for i in range(len(peaks)):
@@ -134,8 +104,8 @@ def musical_print_creation(sample_path: str, is_hash: bool = False):
                 # get diff of time offsets
                 t_delta = t2 - t1
                 # check if delta is between min & max
-                if t_delta >= MIN_HASH_TIME_DELTA and t_delta <= MAX_HASH_TIME_DELTA:
-                    if not (is_hash):
+                if MIN_HASH_TIME_DELTA <= t_delta <= MAX_HASH_TIME_DELTA:
+                    if not is_hash:
                         musical_print.append([[freq1, freq2, t_delta], t1])
                     else:
 
@@ -212,7 +182,7 @@ def matching_random(data_base: List, musical_print: List):
     return data_base[random_int][0], data_base[random_int][1], 0
 
 
-def matching_brute_force(data_base: List, musical_print: List):
+def matching_brute_force(data_base: List, musical_print: List, show_histo : bool = False, show_stats : bool = False):
     """
     Function that takes a musical print and  gives a the matching song in the
     database using brute forcing
@@ -236,12 +206,50 @@ def matching_brute_force(data_base: List, musical_print: List):
                 if sample_temporal_mark[0] == song_temporal_mark[0]:
                     matching_detlaT.append(song_temporal_mark[1] - sample_temporal_mark[1])
                     nb_temporal_mark_match += 1
-        plt.hist(matching_detlaT)
-        print("Nombre de match pour " + song_musical_print[0] + "-" + song_musical_print[1] + " :",
-              nb_temporal_mark_match)
-        print("Meuilleur DeltaT : ", most_frequent(matching_detlaT))
-        plt.show()
+        if show_stats:
+            print("Nombre de match pour " + song_musical_print[0] + "-" + song_musical_print[1] + " :",
+                  nb_temporal_mark_match)
+            print("Meuilleur DeltaT : ", most_frequent(matching_detlaT))
+        if show_histo:
+            plt.hist(matching_detlaT)
+            plt.show()
         accuracy = nb_temporal_mark_match * matching_detlaT.count(most_frequent(matching_detlaT)) / len(musical_print)
         if accuracy > match[2]:
             match = [song_musical_print[0], song_musical_print[1], accuracy]
-    print(match)
+    return match
+
+
+
+class BaseMatcher:
+    NAME: str
+    data_base = []
+
+    def load_db(self, data_base_path: str):
+        self.data_base = db.get_all_data_base(data_base_path)
+
+    def match(self, audio_file: str):
+        raise NotImplemented()
+
+    def test(self, data_base_path: str, test_data_base_path: str):
+        test_data_base = [] #faire le lien avec la base de test
+                            #list : [[song_title, song_author, song_path]]
+        nb_good_match = 0
+        for song in test_data_base:
+            match = self.match(song[2])
+            if(match[0] == song[0] and match[1] == song[1]):
+                nb_good_match +=1
+        return nb_good_match/len(test_data_base) * 100
+
+class RandomMatcher(BaseMatcher):
+    NAME = "random"
+
+
+
+class BruteforceMatcher(BaseMatcher):
+    NAME = "brute-force"
+
+
+MATCHERS = {matcher_class.NAME: matcher_class
+            for matcher_class in [RandomMatcher, BruteforceMatcher]}
+
+v = MATCHERS["random"]()
