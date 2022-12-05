@@ -1,4 +1,4 @@
-import Shazamage as sh
+import shazamage as sh
 import shazam_data_base as db
 
 if __name__ == '__main__':
