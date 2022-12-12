@@ -167,58 +167,6 @@ def most_frequent(list: List):
     return num
 
 
-def matching_random(data_base: List, musical_print: List):
-    """
-    Function that takes a musical print and
-    randomly gives a the matching song in the
-    database
-    :param data_base: List that gives for each song its name, artist and musical print
-    :param musical_print: Musical print of the song you want to know the name
-    :return: The name and artist of the song that matched in the data base, and a statistic
-    showing the accuracy of the match : ("name", "artist", float stat)
-    """
-    random_int = rd.randint(0, len(data_base) - 1)
-    # print("Random Match : ", data_base[random_int][0], " - ", data_base[random_int][1] , "; Accuracy : ", 0)
-    return data_base[random_int][0], data_base[random_int][1], 0
-
-
-def matching_brute_force(data_base: List, musical_print: List, show_histo : bool = False, show_stats : bool = False):
-    """
-    Function that takes a musical print and  gives a the matching song in the
-    database using brute forcing
-    :param data_base: List that gives for each song its name, artist and musical print
-    :param musical_print: Musical print of the song you want to know the name
-    :return: The name and artist of the song that matched in the data base, and a statistic
-    showing the accuracy of the match : ("name", "artist", float stat)
-    """
-    song_title = 'unknow'
-    matching_rate = 0
-    # Brute forced researsh of temporal marks match comparing musical print in the data base with the one
-    # of the song
-    match = [matching_random(data_base, musical_print)[0], matching_random(data_base, musical_print)[1],
-             matching_random(data_base, musical_print)[2]]
-    for song_musical_print in data_base:
-        matching_detlaT = []
-        nb_temporal_mark_match = 0
-        for song_temporal_mark in song_musical_print[2]:
-
-            for sample_temporal_mark in musical_print:
-                if sample_temporal_mark[0] == song_temporal_mark[0]:
-                    matching_detlaT.append(song_temporal_mark[1] - sample_temporal_mark[1])
-                    nb_temporal_mark_match += 1
-        if show_stats:
-            print("Nombre de match pour " + song_musical_print[0] + "-" + song_musical_print[1] + " :",
-                  nb_temporal_mark_match)
-            print("Meuilleur DeltaT : ", most_frequent(matching_detlaT))
-        if show_histo:
-            plt.hist(matching_detlaT)
-            plt.show()
-        accuracy = nb_temporal_mark_match * matching_detlaT.count(most_frequent(matching_detlaT)) / len(musical_print)
-        if accuracy > match[2]:
-            match = [song_musical_print[0], song_musical_print[1], accuracy]
-    return match
-
-
 
 class BaseMatcher:
     NAME: str
@@ -227,26 +175,75 @@ class BaseMatcher:
     def load_db(self, data_base_path: str):
         self.data_base = db.get_all_data_base(data_base_path)
 
-    def match(self, audio_file: str):
+    def match(self, song_path: str):
         raise NotImplemented()
 
-    def test(self, data_base_path: str, test_data_base_path: str):
-        test_data_base = [] #faire le lien avec la base de test
-                            #list : [[song_title, song_author, song_path]]
+    def test(self, test_data_base_path: str):
+        test_data_base = db.get_all_data_base_as_test_data(test_data_base_path)
         nb_good_match = 0
         for song in test_data_base:
             match = self.match(song[2])
-            if(match[0] == song[0] and match[1] == song[1]):
-                nb_good_match +=1
-        return nb_good_match/len(test_data_base) * 100
+            if match[0] == song[0] and match[1] == song[1]:
+                nb_good_match += 1
+        return nb_good_match / len(test_data_base) * 100
+
 
 class RandomMatcher(BaseMatcher):
     NAME = "random"
 
+    def match(self, song_path: str):
+        """
+        Function that takes a song_path and
+        randomly gives a the matching song in the
+        database
+        :param song_path:  Musical print of the song you want to know the name
+        :return: The name and artist of the song that matched in the data base, and a statistic
+        showing the accuracy of the match : ["name", "artist", float stat = 0]
+        """
+        random_int = rd.randint(0, len(self.data_base) - 1)
+        return [self.data_base[random_int][0], self.data_base[random_int][1], 0]
 
 
 class BruteforceMatcher(BaseMatcher):
     NAME = "brute-force"
+
+    def match(self, song_path: str, show_histo: bool = False, show_stats: bool = False):
+        """
+        Function that takes a musical print and  gives a the matching song in the
+        database using brute forcing
+        :param data_base: List that gives for each song its name, artist and musical print
+        :param musical_print: Musical print of the song you want to know the name
+        :return: The name and artist of the song that matched in the data base, and a statistic
+        showing the accuracy of the match : ("name", "artist", float stat)
+        """
+        song_title = 'unknow'
+        matching_rate = 0
+        musical_print = musical_print_creation(song_path)
+        # Brute forced researsh of temporal marks match comparing musical print in the data base with the one
+        # of the song
+        match = ['none', 'none',
+                0]
+        for song_musical_print in self.data_base:
+            matching_detlaT = []
+            nb_temporal_mark_match = 0
+            for song_temporal_mark in song_musical_print[2]:
+
+                for sample_temporal_mark in musical_print:
+                    if sample_temporal_mark[0] == song_temporal_mark[0]:
+                        matching_detlaT.append(song_temporal_mark[1] - sample_temporal_mark[1])
+                        nb_temporal_mark_match += 1
+            if show_stats:
+                print("Nombre de match pour " + song_musical_print[0] + "-" + song_musical_print[1] + " :",
+                      nb_temporal_mark_match)
+                print("Meuilleur DeltaT : ", most_frequent(matching_detlaT))
+            if show_histo:
+                plt.hist(matching_detlaT)
+                plt.show()
+            accuracy = nb_temporal_mark_match * matching_detlaT.count(most_frequent(matching_detlaT)) / len(
+                musical_print)
+            if accuracy > match[2]:
+                match = [song_musical_print[0], song_musical_print[1], accuracy]
+        return match
 
 
 MATCHERS = {matcher_class.NAME: matcher_class
