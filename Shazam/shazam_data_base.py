@@ -16,6 +16,9 @@ class Songs(pw.Model):
 
 
 def add_a_song(data_base_path: str, song_path: str, song_title: str, song_author: str):
+    '''Function that takes in parameter all the attributes of a song and add it in the database
+    :param 4 strings which correspond to the parameters necessary to add a line in the database
+    :return add a line in the database'''
     data_base = pw.SqliteDatabase(data_base_path)
     data_base.connect()
     data_base.create_tables([Songs])
@@ -26,6 +29,9 @@ def add_a_song(data_base_path: str, song_path: str, song_title: str, song_author
 
 
 def get_finger_print(data_base_path: str, song_title: str, song_author: str):
+    '''Function to obtain the finger print of a song from title and the author of the song
+        :param name of the data base, title and artist of the song
+        :return finger print of the song'''
     data_base = pw.SqliteDatabase(data_base_path)
     data_base.connect()
     for song in Songs.select().where(Songs.title == song_title and Songs.author == song_author):
@@ -34,6 +40,7 @@ def get_finger_print(data_base_path: str, song_title: str, song_author: str):
 
 
 def see_songs_in_data_base(data_base_path):
+    '''Function which display for each song the title and the author'''
     data_base = pw.SqliteDatabase(data_base_path)
     data_base.connect()
     for song in Songs.select():
@@ -42,6 +49,9 @@ def see_songs_in_data_base(data_base_path):
 
 
 def delete_a_song_in_data_base(data_base_path: str, song_title: str, song_author: str):
+    '''Delete a song from the database
+    :param title and author of the song you want to delete
+    :return delete a line in the database'''
     data_base = pw.SqliteDatabase(data_base_path)
     data_base.connect()
     for song in Songs.select().where(Songs.title == song_title and Songs.author == song_author):
@@ -50,6 +60,9 @@ def delete_a_song_in_data_base(data_base_path: str, song_title: str, song_author
 
 
 def delete_all_songs_in_data_base(data_base_path: str):
+    '''Function which delete all the songs of the database
+     :param name of the database
+     :return database empty'''
     data_base = pw.SqliteDatabase(data_base_path)
     data_base.connect()
     for song in Songs.select():
@@ -58,6 +71,10 @@ def delete_all_songs_in_data_base(data_base_path: str):
 
 
 def get_all_data_base(data_base_path: str):
+    '''Function which, get all the attributes of all the songs and add it in a list
+    :param name of the database
+    :return a list of list containing for each song the title, the author and the fingerprint
+    exemple: [[title1,author1,fingerprint1],[title2,author2,fingerprint2],.....] '''
     data_base = pw.SqliteDatabase(data_base_path)
     data_base.connect()
     list_song = []
