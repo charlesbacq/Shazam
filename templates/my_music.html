@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>My Music</h1>
+
+<!--<?php-->
+<!--$db = new SQLite3('demo.sqlite');-->
+<!--$result = $db->query('SELECT * FROM songs');-->
+<!--var_dump($result->fetchArray());-->
+<!--?>-->
+
+<!--<hr>-->
+<!-- <?php-->
+<!--echo '<table>';-->
+<!--$result = $db->query('SELECT * FROM songs');-->
+<!--while ($result->fetchArray(SQLITE3_ASSOC )) {-->
+<!--       echo '<tr><td>' . $row['CAT'] . '</td><td>' . $row['NOM'] . '</td></tr>';-->
+<!--}-->
+<!--echo '</table>';-->
+<!--?>-->
+<!--<p> fin de page</p>-->
+<!--</body>-->
+<!--</html>-->
+
+
+
+
+
+<table class="table table-bordered">
+    <caption>My music</caption>
+<tr>
+    <th><p class="text-error">Title</p></th>
+    <th><p class="text-error">Author</p></th>
+    <th><p class="text-error">Shazamed Date</p></th>
+
+    </tr>
+<tr>
+
+</table>
+
+{% endblock content %}
