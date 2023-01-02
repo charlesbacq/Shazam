@@ -25,7 +25,7 @@ class AddSongForm(FlaskForm):
 
 class ShazamageForm(FlaskForm):
     song = FileField(validators=[FileRequired()])
-    submit = SubmitField('Add')
+    submit = SubmitField('Match')
 
 
 class LoginForm(FlaskForm):
