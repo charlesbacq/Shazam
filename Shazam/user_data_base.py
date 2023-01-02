@@ -78,6 +78,21 @@ def delete_all_users(data_base_path: str):
         user.delete_instance()
     data_base.close()
 
+def assert_username(user_name: str, data_base_path: str):
+    try:
+        data_base = pw.SqliteDatabase(data_base_path)
+        data_base.connect()
+        Request = Users.select().where(Users.username == user_name)
+        data_base.close()
+
+        if (Request.count() != 0):
+            raise UserNameError
+
+        return True
+
+    except UserNameError:
+        print("This username is already taken! Please choose another username")
+        return False
 
 def assert_connection(user_name: str, user_password: str, data_base_path: str):
     """Function which allows the connection if the user writes a right (username,password) couple
@@ -95,11 +110,13 @@ def assert_connection(user_name: str, user_password: str, data_base_path: str):
         for user in Request:
             if user.password != user_password:
                 raise PasswordError
-            return True
+
+        return True
 
     except UserNameError:
         print("This username does not exist, please sign in!")
         return False
+
     except PasswordError:
         print("Password incorrect")
         return False
@@ -160,7 +177,7 @@ def see_user_musics(data_base_path: str, user_name: str):
 if __name__ == '__main__':
     # delete the previous users
     delete_all_users(data_base_path)
-    #delete_all_musics(data_base_path)
+    delete_all_musics(data_base_path)
 
     # Data user 1
     username1 = 'briac'
