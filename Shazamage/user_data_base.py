@@ -112,7 +112,7 @@ def assert_connection(user_name: str, user_password: str, data_base_path: str):
         for user in Request:
             if user.password != user_password:
                 raise PasswordError
-            return True
+        return True
 
     except UserNameError:
         print("This username does not exist, please sign in!")
