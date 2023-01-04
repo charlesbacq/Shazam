@@ -4,8 +4,7 @@ import ast
 import pathlib as path
 
 # Path and database
-#data_base_path = 'C:/Users/briac/OneDrive/ENPC2A/semestre1/tdlog/Projet_shazam/Shazam/Shazam/user.db'
-db_user_path = "Shazamage/user.db"
+db_user_path = "user.db"
 db_user = pw.SqliteDatabase(db_user_path)
 
 
