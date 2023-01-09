@@ -4,7 +4,6 @@ import ast
 import pathlib as path
 
 # Path and database
-#data_base_path = 'C:/Users/briac/OneDrive/ENPC2A/semestre1/tdlog/Projet_shazam/Shazam/Shazam/user.db'
 db_user_path = "Shazamage/user.db"
 db_user = pw.SqliteDatabase(db_user_path)
 
@@ -17,12 +16,29 @@ class UserNameError(Exception):
 class PasswordError(Exception):
     pass
 
-
 # Define Tables
+
+
 class Users(pw.Model):
     username = pw.CharField()
     email = pw.CharField()
     password = pw.CharField()
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_authenticated(self):
+        return self.is_active
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    @property
+    def get_id(self):
+        return self.username
 
     class Meta:
         database = db_user  # This model uses the "user.db" database.
@@ -38,6 +54,7 @@ class UsersMusics(pw.Model):
 
 
 # Functions for users/passwords management
+
 def create_user(user_name: str, user_email: str, user_password: str):
     """Function that takes in parameters 2 strings and return the correspondant instance of class Users
         :param 2 strings necessary to define an instance of class Users
@@ -86,12 +103,9 @@ def assert_username(user_name: str, data_base_path: str):
         data_base.connect()
         Request = Users.select().where(Users.username == user_name)
         data_base.close()
-
         if (Request.count() != 0):
             raise UserNameError
-
         return True
-
     except UserNameError:
         print("This username is already taken! Please choose another username")
         return False
@@ -112,14 +126,23 @@ def assert_connection(user_name: str, user_password: str, data_base_path: str):
         for user in Request:
             if user.password != user_password:
                 raise PasswordError
-            return True
+            return (True,user)
 
     except UserNameError:
         print("This username does not exist, please sign in!")
-        return False
+        return (False,None)
     except PasswordError:
         print("Password incorrect")
-        return False
+        return (False,None)
+
+
+def load_user_from_db(user_id):
+    data_base = pw.SqliteDatabase(db_user_path)
+    data_base.connect()
+    user_load = Users.select().where(Users.id == user_id)
+    data_base.close()
+    return user_load
+
 
 # Functions for users when they are connected
 def create_user_music(user_name: str, music_title: str, music_author: str):
