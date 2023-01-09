@@ -1,0 +1,11 @@
+librosa
+peewee
+flask
+flask-login
+flask_wtf
+wtforms
+email-validator
+matplotlib
+
+
+
