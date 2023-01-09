@@ -1,5 +1,5 @@
-import shazamage as sh
-import shazam_data_base as db
+from Shazamage import shazamage as sh
+from Shazamage import shazam_data_base as db
 
 if __name__ == '__main__':
     db.see_songs_in_data_base('song.db')
@@ -9,7 +9,6 @@ if __name__ == '__main__':
     #print(v.match('hey brother maison.flac'))
     #print(v.match('Avicii - Hey Brother extrait.flac'))
     #print(v.match('hey brother maison2.flac'))
-    print(v.match('Avicii - Hey Brother 142.flac'))
-    #"coucou"
+    print(v.match('Avicii - Hey Brother 142 copie.flac'))
     pass
 

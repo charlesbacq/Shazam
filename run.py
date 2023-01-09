@@ -1,4 +1,5 @@
-from flask import flash, redirect
+import flask_login
+from flask import flash
 from Shazamage.forms import RegistrationForm, AddSongForm, LoginForm, ShazamageForm
 from flask import Flask
 from flask import render_template, redirect, url_for, request, send_from_directory
@@ -9,45 +10,34 @@ from Shazamage import shazam_data_base as sdb
 from Shazamage import user_data_base as udb
 from Shazamage import shazamage as sh
 
-from flask_login import login_user, logout_user, login_required, LoginManager
+from flask_login import login_user, logout_user, login_required, LoginManager, current_user, login_fresh
 from os.path import splitext
-from pydub import AudioSegment
-
-
-
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
+login_manager = LoginManager(app)
+#login_manager.init_app(app)
 
-
-Matcher = sh.BruteforceMatcher()
+print('test')
+Matcher = sh.RandomMatcher()
 Matcher.load_db(sdb.db_song_path)
+print('test2')
 
-posts = [
-    {
-        'author': 'Esther',
-        'title': 'Gradur',
-        'content': 'First post content',
-        'date_posted': 'April 20, 2018'
-    },
-    {
-        'author': 'Charles',
-        'title': 'Les Champs Elysées',
-        'content': 'Second post content',
-        'date_posted': 'April 21, 2018'
-    }
-]
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return udb.load_user_from_db(user_id)
+
 
 
 @app.route("/")
 @app.route("/home")
 def home():
-    return render_template('home.html', posts=posts)
+    if login_fresh():
+        flash(f't fort')
+    return render_template('home.html')
 
-
-@app.route("/about")
-def about():
-    return render_template('about.html', title='About')
 
 
 ## Cette page permet de upload une music et d'appliquer l'algo Shazam que Simon a fait, mais je comprends pas comment appliquer une fonction sur la page html,
@@ -79,13 +69,16 @@ def upload():
         f.save(os.path.join(
             app.instance_path, filename
         ))
-        sdb.add_a_song(sdb.db_song_path,os.path.join(app.instance_path, filename),form.title.data,form.author.data)
+        sdb.add_a_song(sdb.db_song_path, os.path.join(app.instance_path, filename), form.title.data, form.author.data)
         flash(f'The song matched is added', 'success')
         return redirect(url_for('home'))
     return render_template('upload.html', title='Upload', form=form)
 
 @app.route('/shazamage',methods=['GET', 'POST'])
 def shazamage():
+    if current_user.is_authenticated:
+        flash(f'ça marche')
+        print('ça marche')
     form = ShazamageForm()
     if form.validate_on_submit():
         f = form.song.data
@@ -125,15 +118,39 @@ def register():
 ## il faut voir si elle fonctionne mais il faut une base de donnée et j'ai du mal à comprendre comment en faire une(même d'essais)
 
 @app.route("/login", methods=['GET', 'POST'])
+# def login():
+#     form = LoginForm()
+#     if form.validate_on_submit():
+#         if form.username.data == 'admin' and form.password.data == 'password':
+#             flash('You have been logged in!', 'success')
+#             return redirect(url_for('home'))
+#         else:
+#             flash('Login Unsuccessful. Please check username and password', 'danger')
+#     return render_template('login.html', title='Login', form=form)
+
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        if form.email.data == 'admin@blog.com' and form.password.data == 'password':
+        bool, user = udb.assert_connection(form.username.data, form.password.data, udb.db_user_path)
+        if bool:
+            login_user(user)
             flash('You have been logged in!', 'success')
-            return redirect(url_for('home'))
+            #return redirect(url_for('home'))
         else:
             flash('Login Unsuccessful. Please check username and password', 'danger')
+    if current_user.is_authenticated:
+        print('test')
+        return redirect(url_for('home'))
     return render_template('login.html', title='Login', form=form)
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
+    return render_template('logout.html', title='Login', form=form)
+
+
 
 
 if __name__ == '__main__':

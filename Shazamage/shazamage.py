@@ -1,50 +1,51 @@
 from pathlib import Path
 from typing import List, Tuple
 
-
+import librosa as lb
 import numpy as np
 import matplotlib.pyplot as plt
+import librosa.display
 import hashlib
 import random as rd
-import librosa
-#import librosa.display
 from Shazamage import shazam_data_base as db
 
 IDX_FREQ_I = 0
 IDX_TIME_J = 1
 
-# Size of the FFT window, affects frequency granularity
-DEFAULT_WINDOW_SIZE = 4096
+# Sampling rate of the song when analysed
+DEFAULT_SAMPLING_RATE = 22050
 
-# Ratio by which each sequential window overlaps the last and the
-# next window. Higher overlap will allow a higher granularity of offset
-# matching, but potentially more fingerprints.
-DEFAULT_OVERLAP_RATIO = 0.5
+# Parameter that specifies the number of samples to advance the window at each frame
+# when using the librosa onset strengt function.
+# It controls the time resolution of the resulting envelope.
+DEFAULT_HOP_LENGHT = 512
+
+# Parameter that specifies the minimum number of
+# samples that must be present between two local maxima.
+# Higher values mean less fingerprints and faster matching,
+# but can potentially affect accuracy.
+DEFAULT_WAIT = 5
+
+# Parameter that specifies a threshold for identifying local maxima.
+# For the function that identifies peaks in an extract.
+# A sample is considered a local maximum if it is greater than all neighboring
+# samples by at least delta.
+DEFAULT_PEAKS_DELTA = 0.5
 
 # Degree to which a fingerprint can be paired with its neighbors --
 # higher will cause more fingerprints, but potentially better accuracy.
-DEFAULT_FAN_VALUE = 15
+DEFAULT_FAN_VALUE = 40
 
 # Minimum amplitude in spectrogram in order to be considered a peak.
 # This can be raised to reduce number of fingerprints, but can negatively
 # affect accuracy.
-DEFAULT_AMP_MIN = 10
-
-# Number of cells around an amplitude peak in the spectrogram in order
-# for Dejavu to consider it a spectral peak. Higher values mean less
-# fingerprints and faster matching, but can potentially affect accuracy.
-PEAK_NEIGHBORHOOD_SIZE = 20
+DEFAULT_AMP_MIN = 3
 
 # Thresholds on how close or far fingerprints can be in time in order
 # to be paired as a fingerprint. If your max is too low, higher values of
 # DEFAULT_FAN_VALUE may not perform as expected.
 MIN_HASH_TIME_DELTA = 0
 MAX_HASH_TIME_DELTA = 200
-
-# Number of bits to throw away from the front of the SHA1 hash in the
-# fingerprint calculation. The more you throw away, the less storage, but
-# potentially higher collisions and misclassifications when identifying songs.
-FINGERPRINT_REDUCTION = 20
 
 
 def sample_loading(sample_path: str):
@@ -53,7 +54,7 @@ def sample_loading(sample_path: str):
     :param sample_path: path of the sample of the song you want to load
     :return: A loaded sample exploitable in Librosa
     """
-    return librosa.load(sample_path)
+    return lb.load(sample_path, sr=DEFAULT_SAMPLING_RATE)
 
 
 def create_peaks(sample_path: str):
@@ -64,10 +65,13 @@ def create_peaks(sample_path: str):
     """
     y, sr = sample_loading(sample_path)
     onset_env = librosa.onset.onset_strength(y=y, sr=sr,
-                                             hop_length=512,
+                                             hop_length=DEFAULT_HOP_LENGHT,
                                              aggregate=np.median)
-    S = np.abs(librosa.stft(y))
-    peaks = librosa.util.peak_pick(onset_env, pre_max=3, post_max=3, pre_avg=3, post_avg=5, delta=0.5, wait=10)
+    S = np.abs(lb.stft(y))
+    peaks = librosa.util.peak_pick(onset_env, pre_max=DEFAULT_AMP_MIN,
+                                   post_max=DEFAULT_AMP_MIN, pre_avg=DEFAULT_AMP_MIN,
+                                   post_avg=DEFAULT_AMP_MIN, delta=DEFAULT_PEAKS_DELTA,
+                                   wait=DEFAULT_WAIT)
     peaks_frequency = []
     for t in peaks:
         max_f_t = 0
@@ -75,7 +79,7 @@ def create_peaks(sample_path: str):
             if S[i][t] > S[max_f_t][t]:
                 max_f_t = i
         peaks_frequency.append(max_f_t)
-    times = librosa.times_like(onset_env, sr=sr, hop_length=512)
+    times = librosa.times_like(onset_env, sr=sr, hop_length=DEFAULT_HOP_LENGHT)
     return [[peaks_frequency[i], times[peaks[i]]] for i in range(len(peaks))]
 
 
@@ -125,9 +129,9 @@ def display_spectro(sample_path: str, show_peaks: bool = True):
     """
     y, sr = sample_loading(sample_path)
     onset_env = librosa.onset.onset_strength(y=y, sr=sr,
-                                             hop_length=512,
+                                             hop_length=DEFAULT_HOP_LENGHT,
                                              aggregate=np.median)
-    times = librosa.times_like(onset_env, sr=sr, hop_length=512)
+    times = librosa.times_like(onset_env, sr=sr, hop_length=DEFAULT_HOP_LENGHT)
     fig, ax = plt.subplots(nrows=2, sharex=True)
     D = np.abs(librosa.stft(y))
     librosa.display.specshow(librosa.amplitude_to_db(D, ref=np.max),
@@ -166,7 +170,6 @@ def most_frequent(list: List):
             num = i
 
     return num
-
 
 
 class BaseMatcher:
@@ -223,7 +226,7 @@ class BruteforceMatcher(BaseMatcher):
         # Brute forced researsh of temporal marks match comparing musical print in the data base with the one
         # of the song
         match = ['none', 'none',
-                0]
+                 0]
         for song_musical_print in self.data_base:
             matching_detlaT = []
             nb_temporal_mark_match = 0
@@ -237,12 +240,15 @@ class BruteforceMatcher(BaseMatcher):
                 print("Nombre de match pour " + song_musical_print[0] + "-" + song_musical_print[1] + " :",
                       nb_temporal_mark_match)
                 print("Meuilleur DeltaT : ", most_frequent(matching_detlaT))
-            if show_histo:
+            if show_histo and nb_temporal_mark_match>0:
+                fig, ax = plt.subplots()
                 plt.hist(matching_detlaT)
+                ax.set_title(str(song_musical_print[0]) + '-' + str(song_musical_print[1]))
                 plt.show()
+            assert(len(musical_print) !=0)
             accuracy = nb_temporal_mark_match * matching_detlaT.count(most_frequent(matching_detlaT)) / len(
                 musical_print)
-            if accuracy > match[2]:
+            if accuracy > match[2] and most_frequent(matching_detlaT)>0:
                 match = [song_musical_print[0], song_musical_print[1], accuracy]
         return match
 
