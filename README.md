@@ -12,7 +12,11 @@ You can also create your own data base in $cli.py.
 
 This project is the final project of the class TDLOG.
 ## SetUp
-
+You can set the algorithm on your machine using this command in your python console: 
+```python
+>>>python setup.py
+>>>pip install .
+```
 ## Fingerprinting
 
 Let's say we want to fingerprint the song Freed-from-desire by Gala  and add
