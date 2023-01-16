@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
     <h1>My Music</h1>
-
+        {{ username }}
 <!--<?php-->
 <!--$db = new SQLite3('demo.sqlite');-->
 <!--$result = $db->query('SELECT * FROM songs');-->
@@ -22,16 +22,12 @@
 <!--</html>-->
 
 
-
-
-
 <table class="table table-bordered">
     <caption>My music</caption>
 <tr>
     <th><p class="text-error">Title</p></th>
     <th><p class="text-error">Author</p></th>
     <th><p class="text-error">Shazamed Date</p></th>
-
     </tr>
 <tr>
 

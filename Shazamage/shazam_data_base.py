@@ -206,7 +206,8 @@ if __name__ == '__main__':
     #delete_all_test_songs_in_test_data_base('test_song.db')
     #see_test_songs_in_test_data_base('test_song.db')
     #add_file_in_data_base('song.db','sons_flac')
-    #delete_all_songs_in_data_base('song.db')
-    see_songs_in_data_base('song.db')
+    delete_all_songs_in_data_base('song.db')
+    #see_songs_in_data_base('song.db')
     pass
 # utiliser pathlib pour faire un dossier avec le sons
+

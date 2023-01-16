@@ -23,6 +23,7 @@ class Users(pw.Model):
     username = pw.CharField()
     email = pw.CharField()
     password = pw.CharField()
+    is_connected = pw.CharField()
 
     @property
     def is_active(self):
@@ -36,7 +37,6 @@ class Users(pw.Model):
     def is_anonymous(self):
         return False
 
-    @property
     def get_id(self):
         return self.username
 
@@ -62,6 +62,25 @@ def create_user(user_name: str, user_email: str, user_password: str):
     user0 = Users(username=user_name, email=user_email, password=user_password)
     return user0
 
+def connection(data_base_path : str, user_name: str):
+    data_base = pw.SqliteDatabase(data_base_path)
+    data_base.connect()
+    bool = False
+    for user in users.select().where( user.username == user_name):
+        if user.is_connected == 1:
+            bool = True
+    data_base.close()
+    return bool
+
+def someone_is_connected(data_base_path : str):
+    data_base = pw.SqliteDatabase(data_base_path)
+    data_base.connect()
+    bool = False
+    for user in users:
+        if user.is_connected == 1:
+            bool = True
+    data_base.close()
+    return bool
 
 def add_user(data_base_path: str, user_name: str, user_email: str, user_password: str):
     """Function that takes in parameters all the attributes of an instance of class Users and add it in the table users of the database
