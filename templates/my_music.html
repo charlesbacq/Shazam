@@ -1,16 +1,11 @@
 {% extends "layout.html" %}
 {% block content %}
-    <h1>My Music</h1>
-    <h1> {% if current_user.is_authenticated %}
-  Hi {{ current_user.username }}!
-{% endif %}
-    </h1>
+
+    <h3>Hi {{ current_user.username }}, this is your songs : </h3>
 <table class="table table-bordered">
-    <caption>My music</caption>
 <tr>
     <th><p class="text-error">Title</p></th>
     <th><p class="text-error">Author</p></th>
-    <th><p class="text-error">Shazamed Date</p></th>
     </tr>
 <tr>
 

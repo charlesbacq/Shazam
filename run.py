@@ -58,6 +58,8 @@ def upload():
             app.instance_path, filename
         ))
         sdb.add_a_song(sdb.db_song_path, os.path.join(app.instance_path, filename), form.title.data, form.author.data)
+        if current_user.is_authenticated:
+            udb.add_user_music(udb.db_user_path,current_user.username,form.title.data,form.author.data)
         flash(f'The song matched is added', 'success')
         return redirect(url_for('home'))
     return render_template('upload.html', title='Upload', form=form)
@@ -71,6 +73,8 @@ def shazamage():
         #f.save(os.path.join(app.instance_path, filename))
         result = Matcher.match(os.path.join(app.instance_path, filename))
         flash(f'The song matched is {result[0]} by {result[1]} with a score of {result[2]}'  '.')
+        if current_user.is_authenticated :
+            udb.add_user_music(udb.db_user_path, current_user.username, result[0], result[1])
         return redirect(url_for('shazamage'))
     return render_template('shazamage.html',title='Shazamage',form=form)
 
@@ -81,8 +85,9 @@ def shazamage():
 @app.route("/my_music")
 @login_required
 def my_music():
-    flash(f'{current_user.username}','success')
-    #flash(f'{current_user.is_authenticated}', 'success')
+    musics = udb.display_user_musics(sdb.db_song_path, current_user.username)
+    for music in musics:
+        flash(f' Title : {music[0]}, Author : {music[1]} ')
     return render_template('my_music.html', title='My Music')
 
 

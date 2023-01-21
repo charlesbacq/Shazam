@@ -218,6 +218,15 @@ def see_user_musics(data_base_path: str, user_name: str):
     data_base.close()
 
 
+def display_user_musics(data_base_path : str, username : str):
+    data_base = pw.SqliteDatabase(data_base_path)
+    data_base.connect()
+    list = []
+    for music in UsersMusics.select().where(UsersMusics.username == username):
+        list.append([music.title, music.author])
+    data_base.close()
+    return list
+
 if __name__ == '__main__':
     # delete the previous users
     delete_all_users(db_user_path)
