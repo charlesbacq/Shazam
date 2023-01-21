@@ -1,27 +1,10 @@
 {% extends "layout.html" %}
 {% block content %}
     <h1>My Music</h1>
-        {{ username }}
-<!--<?php-->
-<!--$db = new SQLite3('demo.sqlite');-->
-<!--$result = $db->query('SELECT * FROM songs');-->
-<!--var_dump($result->fetchArray());-->
-<!--?>-->
-
-<!--<hr>-->
-<!-- <?php-->
-<!--echo '<table>';-->
-<!--$result = $db->query('SELECT * FROM songs');-->
-<!--while ($result->fetchArray(SQLITE3_ASSOC )) {-->
-<!--       echo '<tr><td>' . $row['CAT'] . '</td><td>' . $row['NOM'] . '</td></tr>';-->
-<!--}-->
-<!--echo '</table>';-->
-<!--?>-->
-<!--<p> fin de page</p>-->
-<!--</body>-->
-<!--</html>-->
-
-
+    <h1> {% if current_user.is_authenticated %}
+  Hi {{ current_user.username }}!
+{% endif %}
+    </h1>
 <table class="table table-bordered">
     <caption>My music</caption>
 <tr>

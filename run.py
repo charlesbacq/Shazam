@@ -12,29 +12,22 @@ from Shazamage import shazamage as sh
 
 from flask_login import login_user, logout_user, login_required, LoginManager, current_user, login_fresh
 from os.path import splitext
-print('test')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
-login_manager = LoginManager(app)
-#login_manager.init_app(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
 
-print('test')
 Matcher = sh.BruteforceMatcher()
 Matcher.load_db(sdb.db_song_path)
-print('test2')
+print('test_start')
 
+#user = None
 
-
-@login_manager.user_loader
-def load_user(user_id):
-    return udb.load_user_from_db(user_id)
 
 
 @app.route("/")
 @app.route("/home")
 def home():
-    if login_fresh():
-        flash(f't fort')
     return render_template('home.html')
 
 
@@ -53,10 +46,6 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# def mp3_to_flac(mp3_path):
-#     flac_path = "%s.flac" % splitext(mp3_path)[0]
-#     son = AudioSegment.from_mp3(mp3_path)
-#     son.export(flac_path, format = "flac")
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -90,8 +79,10 @@ def shazamage():
 ## mais il faut une base de donnée et j'arrive pas à créer une base de donnée d'essais.
 
 @app.route("/my_music")
+@login_required
 def my_music():
-    #print(current_user.username)
+    flash(f'{current_user.username}','success')
+    #flash(f'{current_user.is_authenticated}', 'success')
     return render_template('my_music.html', title='My Music')
 
 
@@ -105,35 +96,39 @@ def register():
         # user = User(username=form.username.data, email=form.email.data,password=form.password.data)
         udb.add_user(udb.db_user_path, form.username.data, form.email.data, form.password.data)
         flash(f'Account created for {form.username.data}!', 'success')
-        return redirect(url_for('home'))
+        return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
 ## Permet de login, j'ai mis deux fonctions : la première c'est celle du tuto qui utilise pas peewee, la deuxième c'est celle que j'ai crée,
 ## il faut voir si elle fonctionne mais il faut une base de donnée et j'ai du mal à comprendre comment en faire une(même d'essais)
 
+@login_manager.user_loader
+def load_user(user_id):
+    print('load_user', user_id)
+    return udb.load_user_from_db(user_id)
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
+        logout_user()
         bool, user = udb.assert_connection(form.username.data, form.password.data, udb.db_user_path)
         if bool:
-            print(user)
+            print(user,type(user),user.id,user.username)
             login_user(user)
-            flash('You have been logged in!', 'success')
-            #return redirect(url_for('home'))
+            load_user(user)
+            flash(f'Congratulations {current_user.username}, you have been logged in ', 'success')
         else:
             flash('Login Unsuccessful. Please check username and password', 'danger')
     return render_template('login.html', title='Login', form=form)
 
 
-@app.route("/logout")
-@login_required
+@app.route("/logout", methods=['GET', 'POST'])
 def logout():
     form = LogoutForm()
-    #if current_user.is_authenticated:
-     #   flash(f'ça marche')
-     #  print('ça marche')
+    if form.validate_on_submit():
+        logout_user()
+        return redirect(url_for('home'))
     return render_template('logout.html', title='Logout', form=form)
 
 

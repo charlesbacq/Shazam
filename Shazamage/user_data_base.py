@@ -23,22 +23,19 @@ class Users(pw.Model):
     username = pw.CharField()
     email = pw.CharField()
     password = pw.CharField()
-    is_connected = pw.CharField()
 
     @property
     def is_active(self):
         return True
-
     @property
     def is_authenticated(self):
         return self.is_active
-
     @property
     def is_anonymous(self):
         return False
 
     def get_id(self):
-        return self.username
+        return self.id
 
     class Meta:
         database = db_user  # This model uses the "user.db" database.
@@ -158,9 +155,14 @@ def assert_connection(user_name: str, user_password: str, data_base_path: str):
 def load_user_from_db(user_id):
     data_base = pw.SqliteDatabase(db_user_path)
     data_base.connect()
-    user_load = Users.select().where(Users.id == user_id)
+    real_id = user_id
+    user_load = Users.select().where(Users.id == real_id)
     data_base.close()
-    return user_load
+    user_to_connect = 0
+    for user in user_load:
+        user_to_connect = user
+        print(user.username,'ça passe')
+    return user_to_connect
 
 
 # Functions for users when they are connected
