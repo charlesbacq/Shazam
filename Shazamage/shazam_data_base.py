@@ -3,7 +3,7 @@ from Shazamage import shazamage as sh
 import ast
 import pathlib as path
 
-db_song_path="Shazamage/song.db"
+db_song_path = "Shazamage/song.db"
 db_song = pw.SqliteDatabase(db_song_path)
 
 
@@ -135,13 +135,9 @@ def add_a_test_song(test_data_base_path: str, song_path: str, song_title: str, s
     data_base.close()
 
 
-
-
 def see_test_songs_in_test_data_base(test_data_base_path: str):
     data_base = pw.SqliteDatabase(test_data_base_path)
-
     data_base.connect()
-
     for song in TestSongs.select():
         print(song.title + "-" + song.author)
     data_base.close()
@@ -206,8 +202,8 @@ if __name__ == '__main__':
     #delete_all_test_songs_in_test_data_base('test_song.db')
     #see_test_songs_in_test_data_base('test_song.db')
     #add_file_in_data_base('song.db','sons_flac')
-    delete_all_songs_in_data_base('song.db')
+    #delete_all_songs_in_data_base('song.db')
     #see_songs_in_data_base('song.db')
     pass
-# utiliser pathlib pour faire un dossier avec le sons
+
 

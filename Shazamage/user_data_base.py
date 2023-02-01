@@ -1,7 +1,6 @@
 # Imports
 import peewee as pw
-import ast
-import pathlib as path
+
 
 # Path and database
 db_user_path = "Shazamage/user.db"
@@ -27,9 +26,11 @@ class Users(pw.Model):
     @property
     def is_active(self):
         return True
+
     @property
     def is_authenticated(self):
         return self.is_active
+
     @property
     def is_anonymous(self):
         return False
@@ -59,25 +60,6 @@ def create_user(user_name: str, user_email: str, user_password: str):
     user0 = Users(username=user_name, email=user_email, password=user_password)
     return user0
 
-def connection(data_base_path : str, user_name: str):
-    data_base = pw.SqliteDatabase(data_base_path)
-    data_base.connect()
-    bool = False
-    for user in users.select().where( user.username == user_name):
-        if user.is_connected == 1:
-            bool = True
-    data_base.close()
-    return bool
-
-def someone_is_connected(data_base_path : str):
-    data_base = pw.SqliteDatabase(data_base_path)
-    data_base.connect()
-    bool = False
-    for user in users:
-        if user.is_connected == 1:
-            bool = True
-    data_base.close()
-    return bool
 
 def add_user(data_base_path: str, user_name: str, user_email: str, user_password: str):
     """Function that takes in parameters all the attributes of an instance of class Users and add it in the table users of the database
@@ -126,6 +108,7 @@ def assert_username(user_name: str, data_base_path: str):
         print("This username is already taken! Please choose another username")
         return False
 
+
 def assert_connection(user_name: str, user_password: str, data_base_path: str):
     """Function which allows the connection if the user writes a right (username,password) couple
      :param 3 strings (informations of connection)
@@ -142,14 +125,12 @@ def assert_connection(user_name: str, user_password: str, data_base_path: str):
         for user in Request:
             if user.password != user_password:
                 raise PasswordError
-            return (True,user)
+            return True, user
 
     except UserNameError:
-        print("This username does not exist, please sign in!")
-        return (False,None)
+        return False, 'UserNameError'
     except PasswordError:
-        print("Password incorrect")
-        return (False,None)
+        return False, 'PasswordError'
 
 
 def load_user_from_db(user_id):
