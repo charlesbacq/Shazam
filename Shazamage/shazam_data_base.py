@@ -1,5 +1,5 @@
 import peewee as pw
-from Shazamage import shazamage as sh
+import shazamage as sh
 import ast
 import pathlib as path
 
