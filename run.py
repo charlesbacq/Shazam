@@ -29,11 +29,14 @@ def allowed_file(filename):
 @app.route("/")
 @app.route("/home")
 def home():
+    """Function that display the template 'home.html'"""
     return render_template('home.html')
 
 
 @app.route('/shazamage', methods=['GET', 'POST'])
 def shazamage():
+    """Function that display the template 'shazamage.html', let the user shazam a song
+    and add the song the playlist o the user"""
     form = ShazamageForm()
     if form.validate_on_submit():  # if the form have been completed
         f = form.song.data
@@ -48,6 +51,7 @@ def shazamage():
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
+    """Function that display the template 'uplaod.html' and let the user uplaod a song on the website"""
     form = AddSongForm()
     if form.validate_on_submit():
         f = form.song.data
@@ -63,6 +67,7 @@ def upload():
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
+    """Function that display the template 'register.html' and let the user create an account"""
     form = RegistrationForm()
     if form.validate_on_submit():
         udb.add_user(udb.db_user_path, form.username.data, form.email.data, form.password.data)
@@ -79,6 +84,7 @@ def load_user(user_id):
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
+    """Function that display the template 'login.html' and login a user"""
     form = LoginForm()
     if form.validate_on_submit():
         logout_user()
@@ -100,6 +106,7 @@ def login():
 @app.route("/my_music")
 @login_required
 def my_music():
+    """Function that display the template 'my_music.html' and display the musics of a user"""
     musics = udb.display_user_musics(sdb.db_song_path, current_user.username)
     for music in musics:
         flash(f' Title : {music[0]}, Author : {music[1]} ')
@@ -109,6 +116,7 @@ def my_music():
 @app.route("/logout", methods=['GET', 'POST'])
 @login_required
 def logout():
+    """Function that logout a user"""
     form = LogoutForm()
     if form.validate_on_submit():
         logout_user()

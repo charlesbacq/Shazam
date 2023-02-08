@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import librosa.display
 import hashlib
 import random as rd
-from Shazamage import shazam_data_base as db
+import shazam_data_base as db
 
 IDX_FREQ_I = 0
 IDX_TIME_J = 1
