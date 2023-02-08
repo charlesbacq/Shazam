@@ -78,7 +78,6 @@ def register():
 
 @login_manager.user_loader
 def load_user(user_id):
-    print('load_user', user_id)
     return udb.load_user_from_db(user_id)
 
 
