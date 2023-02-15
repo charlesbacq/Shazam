@@ -68,3 +68,8 @@ using this code :
 ```
 
 ## Testing
+
+For testing the project you have to run the file "run.py" and to start the website in local mode. You can test the matching, the upload and the functioning of register/login/logout. Songs must be in flac format, you can use ours songs in "static". You have access to databases to see their evolutions in real time. 
+
+
+
